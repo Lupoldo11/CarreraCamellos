@@ -1,12 +1,10 @@
 package control;
 
 import mensajes.SendIPMulticast;
+import mensajes.ServerReady;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 public class Servidor implements Runnable{
     //Atributos
@@ -16,26 +14,46 @@ public class Servidor implements Runnable{
     //Atributos del Objeto
     String hiloName;
     String grupoMulticast = "";
+    Thread hiloSala;
+    MulticastSocket ms;
+    InetAddress grupo;
+    DatagramPacket paqueteEnvio;
+    DatagramPacket paqueteRecibo;
+    int puerto;
 
     //Constructores
-    public Servidor(int contador, String grupo){
+    public Servidor(int contador, String ipMulti, int puerto){
+        this.puerto = puerto;
         this.hiloName = "Sala"+contador;
-        this.grupoMulticast=grupo.trim();
-        Thread hilo = new Thread(this, "Sala" + contador);
+        this.grupoMulticast= ipMulti.trim();
+        this.hiloSala = new Thread(this, "Sala" + contador);
         System.out.println("Hilo"+contador+" creado");
+        try {
+            ms = new MulticastSocket();
+            grupo = InetAddress.getByName(grupoMulticast);
+        } catch (IOException e) {
+            System.out.println("Error al hacer el multicast");
+        }
     }
 
     //Metodos
-    public void conexionMulticast(){
-        //aquí se conecta por multicast los 3 clientes y el proceso del servidor
+    public Thread getHilo() { return hiloSala; } //conseguir el hilo que usa la instancia
+
+    public void envioPaquete(Object objeto){
         try {
-            MulticastSocket ms = new MulticastSocket();
-            InetAddress grupo = InetAddress.getByName(grupoMulticast);
+            //Generar byte del objeto
+            ByteArrayOutputStream bs= new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream (bs);
+            out.writeObject(objeto); //escribir objeto Persona en el stream
+            out.close(); //cerrar stream
+            byte[] mensaje= bs.toByteArray();
 
+            //Enviar objeto
+            paqueteEnvio = new DatagramPacket(mensaje, mensaje.length, grupo, puerto);
+            ms.send(paqueteEnvio);
         } catch (IOException e) {
-            System.out.println("Server 503");
+            System.out.println("Error al enviar paquete");
         }
-
     }
 
     //Metodo que saca la IP de clase D que tiene que ir generando
@@ -71,9 +89,8 @@ public class Servidor implements Runnable{
                 }
 
                 //Inicia Configuración de la carrera
-                Servidor server = new Servidor(contador, clientes.getIPMulti());
-                server.conexionMulticast();
-                server.run();
+                Servidor server = new Servidor(contador, clientes.getIPMulti(), puerto);
+                server.getHilo().start();
                 contador++;
             }
 
@@ -84,6 +101,10 @@ public class Servidor implements Runnable{
 
     @Override
     public void run() {
+        //Enviar que el servidor está listo
+        ServerReady ready = new ServerReady();
+        ready.setMSG("200");
+        envioPaquete(ready);
         //Aquí se administra toda la carrera
     }
 }

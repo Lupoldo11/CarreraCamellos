@@ -1,6 +1,8 @@
 package mensajes;
 
-public class SendIPMulticast {
+import java.io.Serializable;
+
+public class SendIPMulticast implements Serializable {
     //Atributos
     private String IPMulti;
 
