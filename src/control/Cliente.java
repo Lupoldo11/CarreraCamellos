@@ -20,7 +20,13 @@ public class Cliente {
             BufferedReader entrada = (new BufferedReader(new InputStreamReader(cliente.getInputStream())));
             ipMulticast = entrada.readLine(); //Capta mensaje enviado por servidor (Objeto con MultiCast)
 
-            cliente.close();
+            cliente.close(); //Cierra la TCP
+
+            //Inicio de conexión multicast
+            MulticastSocket ms = new MulticastSocket(puerto);
+            InetAddress grupo = InetAddress.getByName(); //nombreIPMulticast
+            //A partir de aquí hay que administrar la carrera
+
         } catch (IOException e) {
             System.out.println("Server 503"); //El cliente no se puede conectar
         }
