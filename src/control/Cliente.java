@@ -65,15 +65,16 @@ public class Cliente {
             ObjectInputStream in = new ObjectInputStream(cliente.getInputStream());
             SendIPMulticast IPMulti = (SendIPMulticast) in.readObject();
             in.close(); //Capta mensaje enviado por servidor (Objeto con MultiCast) <-
+            System.out.println(IPMulti.getMSG()); //PRUEBA PARA SABER QUE HA COGIDO LA IP
 
             cliente.close(); //Cierra la TCP
 
             //Inicio de conexión multicast UDP
             MulticastSocket ms = new MulticastSocket(puerto);
-            InetAddress grupo = InetAddress.getByName(IPMulti.getIPMulti()); //nombreIPMulticast
+            InetAddress grupo = InetAddress.getByName(IPMulti.getMSG()); //nombreIPMulticast
 
             //A partir de aquí hay que administrar la carrera
-            Cliente camello = new Cliente(IPMulti.getIPMulti(), ms, grupo);
+            Cliente camello = new Cliente(IPMulti.getMSG(), ms, grupo);
             camello.inicioCarrera();
         } catch (IOException e) {
             System.out.println("Server 503"); //El cliente no se puede conectar

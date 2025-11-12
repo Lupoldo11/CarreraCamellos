@@ -81,7 +81,9 @@ public class Servidor implements Runnable{
 
                     //Envio de Objeto SendIPMulticast -> Client
                     ObjectOutputStream out = new ObjectOutputStream (cliente.getOutputStream());
+                    out.flush();
                     out.writeObject(clientes); //envia el objeto al cliente ->
+                    out.flush();
                     out.close(); //cerrar stream
 
                     cliente.close();
@@ -89,7 +91,7 @@ public class Servidor implements Runnable{
                 }
 
                 //Inicia Configuración de la carrera
-                Servidor server = new Servidor(contador, clientes.getIPMulti(), puerto);
+                Servidor server = new Servidor(contador, clientes.getMSG(), puerto);
                 server.getHilo().start();
                 contador++;
             }

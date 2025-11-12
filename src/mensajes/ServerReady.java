@@ -1,15 +1,17 @@
 package mensajes;
 
-public class ServerReady {
-    private String msg;
+public class ServerReady implements Mensaje{
+    private String mensaje;
 
     public ServerReady(){}
 
-    public void setMSG(String msg){
-        this.msg = msg;
+    @Override
+    public String getMSG() {
+        return mensaje;
     }
 
-    public String getMSG(){
-        return msg;
+    @Override
+    public void setMSG(String mensaje) {
+        this.mensaje=mensaje;
     }
 }
