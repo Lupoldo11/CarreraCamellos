@@ -1,22 +1,18 @@
 package mensajes;
 
-public class SendIPMulticast implements Mensaje{
-    //Atributos
-    private String IPMulti;
+import java.io.Serializable;
 
-    //Contructores
-    public SendIPMulticast(String grupo){
-        this.IPMulti= grupo;
-    }
+public class SendIPMulticast implements Mensaje, Serializable {
+    //Atributos
+    private String IPMulti; //TIPO: 230.0.0.1,54321 (IP , puertoUDP)
 
     //Metodos
     @Override
-    public String getMSG() {
+    public String getData() {
         return IPMulti;
     }
-
     @Override
-    public void setMSG(String mensaje) {
+    public void setData(String mensaje) {
         this.IPMulti = mensaje;
     }
 }

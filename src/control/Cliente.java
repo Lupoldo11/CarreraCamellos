@@ -1,85 +1,123 @@
 package control;
 
+import mensajes.InicioCarrera;
+import mensajes.PosicionCamello;
 import mensajes.SendIPMulticast;
-import mensajes.ServerReady;
+import mensajes.ListoJoinMulticast;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
+import java.net.*;
 
-public class Cliente {
-    //atributos
-    String ipMulti;
-    MulticastSocket ms;
-    InetAddress grupo;
+public class Cliente extends Componente{
+    /******************************* Atributos Static *********************************************/
+    //Conexion TCP
+    public static int puertoTCP = 12345;
+    public static String conexionTCP = "localhost"; //cambiar por IP del ordenador en la red WEDU
 
-    //Constructores
-    public Cliente(String ip, MulticastSocket ms, InetAddress grupo){
-        this.ipMulti = ip.trim();
-        this.ms=ms;
-        this.grupo=grupo;
+    /******************************* Atributos Clase *********************************************/
+    private String ipMulti;
+    private MulticastSocket ms;
+    private InetAddress grupo;
+    private int puertoUDP;
+
+    private int posicionCamello1;
+    private int posicionCamello2;
+    private int posicionCamello3;
+    private String camello1;
+    private String camello2;
+    private String camello3;
+
+    /**************************************** Constructor ***************************************/
+    public Cliente(SendIPMulticast ip){
+        String[] config = ip.getData().split(",");
+        this.ipMulti = config[0].trim();
+        this.puertoUDP= Integer.parseInt(config[1].trim());
     }
 
-    //metodos
-    public void inicioCarrera(){
-        //aqui hacer lo que sea con la carrera
-        //Esperar el listo del servidor con el boton en "no pulsable"
-        //El server envia un mensaje de cambio el boton a pulsable
-        //Si le da al botón enviar a todos que se ha iniciado la carrera
-        System.out.println("Paso hasta aqui");
+    /**************************************** Métodos *******************************************/
+    public void joinMulticast(){
+        try {
+            //Inicio de conexión multicast UDP
+            ms = new MulticastSocket(puertoUDP); //averiguar como sacarlo
+            grupo = InetAddress.getByName(ipMulti); //nombreIPMulticast
 
-        while (true){
-            try {
-                byte[] recibido = new byte[4096];
-                DatagramPacket recibo = new DatagramPacket(recibido, recibido.length);
-                ms.receive(recibo);
-
-                ByteArrayInputStream in = new ByteArrayInputStream(recibido);
-                ObjectInputStream ois = new ObjectInputStream(in);
-                ServerReady sv = (ServerReady) ois.readObject();
-                ois.close();
-                in.close();
-
-                System.out.println(sv.getMSG());
-
-            } catch (IOException e) {
-                System.out.println("Error recibir paquete");
-            } catch (ClassNotFoundException e) {
-                System.out.println("No castea el objeto");
-            }
+            SocketAddress sa = new InetSocketAddress(grupo, puertoUDP); //Prueba conectar
+            NetworkInterface ni = NetworkInterface.getByInetAddress(InetAddress.getLocalHost());
+            ms.joinGroup(sa, ni); //Se uniría
+        } catch (IOException e) {
+            System.out.println("Error al Conectarse con el multicast");
+            e.printStackTrace();
         }
     }
 
-    //ejecutable
-    public static void main(String[] args){
-        //Conexion TCP
-        int puerto = 12345;
-        String ipMulticast = "";
+    public void inicioCarrera(){
+        //Esperar el listo del servidor con el boton en "no pulsable"
+        //El server envia un mensaje de cambio el boton a pulsable
+
         try {
-            Socket cliente = new Socket("localhost",12345);
+            InicioCarrera ready = (InicioCarrera) recibirPaqueteUDP(ms);
+            System.out.println(ready.getData());
+            Thread.sleep(10000);
+        } catch (IOException | ClassNotFoundException | InterruptedException e) {
+            System.out.println("Paquete inicio carrera no recibido");
+        }
+
+        boolean salida = false;
+        while (!salida){
+            /*try {
+                PosicionCamello movimiento = (PosicionCamello) recibirPaqueteUDP(ms);
+                if (movimiento.getCamello().equals(camello1)){
+                    posicionCamello1+=Integer.parseInt(movimiento.getData());
+                    //modificar en la UI
+                } else if(movimiento.getCamello().equals(camello2)){
+                    posicionCamello2+=Integer.parseInt(movimiento.getData());
+                    //modificar en la UI
+                } else if(movimiento.getCamello().equals(camello3)){
+                    posicionCamello3+=Integer.parseInt(movimiento.getData());
+                    //modificar en la UI
+                }
+
+                //SI DAN CLICK AL BOTON ENVIAR
+                PosicionCamello move = new PosicionCamello();
+                move.setCamello("pito");
+                move.setData("2");
+                envioPaqueteUDP(move, ms, grupo);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }*/
+            System.out.println("pito");
+        }
+    }
+
+    /**************************************** Ejecutables ***************************************/
+    public static void main(String[] args){
+        try {
+            //Conectando con el Servidor (TCP)
+            Socket cliente = new Socket(conexionTCP,puertoTCP);
             System.out.println("Conectandose...");
 
-            //Aqui recibir el objeto con la IP Multicast
-            ObjectInputStream in = new ObjectInputStream(cliente.getInputStream());
-            SendIPMulticast IPMulti = (SendIPMulticast) in.readObject();
-            in.close(); //Capta mensaje enviado por servidor (Objeto con MultiCast) <-
-            System.out.println(IPMulti.getMSG()); //PRUEBA PARA SABER QUE HA COGIDO LA IP
+            initStream(cliente);
 
+            //Recibe la IP Multicast
+            SendIPMulticast IPMulti = (SendIPMulticast) recibirPaqueteTCP();
+            System.out.println(IPMulti.getData());
+
+            //Mandar OK
+            ListoJoinMulticast ready = new ListoJoinMulticast();
+            ready.setData("200");
+            enviarPaqueteTCP(ready);
+
+            closeStream();
             cliente.close(); //Cierra la TCP
 
-            //Inicio de conexión multicast UDP
-            MulticastSocket ms = new MulticastSocket(puerto);
-            InetAddress grupo = InetAddress.getByName(IPMulti.getMSG()); //nombreIPMulticast
-
             //A partir de aquí hay que administrar la carrera
-            Cliente camello = new Cliente(IPMulti.getMSG(), ms, grupo);
+            Cliente camello = new Cliente(IPMulti);
+            camello.joinMulticast();
             camello.inicioCarrera();
         } catch (IOException e) {
-            System.out.println("Server 503"); //El cliente no se puede conectar
-        } catch (ClassNotFoundException e) {
-            System.out.println("Error al leer o castear el objeto");
+            System.out.println("Servidor Cerrado (Esto es cliente)"); //El cliente no se puede conectar
         }
     }
 }

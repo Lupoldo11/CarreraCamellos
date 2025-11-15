@@ -2,25 +2,19 @@ package mensajes;
 
 import java.io.Serializable;
 
-public class PosicionCamello implements Mensaje {
-    private String mensaje;
-
-    public PosicionCamello(){}
-
-    @Override
-    public String getMSG() {
-        return mensaje;
-    }
-
-    @Override
-    public void setMSG(String mensaje) {
-        this.mensaje=mensaje;
-    }
-
-    //Atributos
+public class PosicionCamello implements Mensaje, Serializable {
+    private String movimiento;
+    private String camello;
 
     //Metodos
-
-    //Constructores
-
+    @Override
+    public String getData() {
+        return movimiento;
+    }
+    @Override
+    public void setData(String mensaje) {
+        this.movimiento=mensaje;
+    }
+    public String getCamello (){return camello;}
+    public void setCamello (String camello){this.camello=camello;}
 }
