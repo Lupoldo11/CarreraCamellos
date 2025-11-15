@@ -55,10 +55,9 @@ public class Cliente extends Componente{
         //El server envia un mensaje de cambio el boton a pulsable
 
         try {
-            InicioCarrera ready = (InicioCarrera) recibirPaqueteUDP(ms);
+            InicioCarrera ready = (InicioCarrera) recibirPaqueteUDP(ms); //Esta recepcion tiene que cambiar el boton a activo
             System.out.println(ready.getData());
-            Thread.sleep(10000);
-        } catch (IOException | ClassNotFoundException | InterruptedException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.out.println("Paquete inicio carrera no recibido");
         }
 
@@ -87,7 +86,6 @@ public class Cliente extends Componente{
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }*/
-            System.out.println("pito");
         }
     }
 

@@ -102,17 +102,15 @@ public class Servidor extends Componente implements Runnable{
     /**************************************** Hilos *********************************************/
     @Override
     public void run() {
-
-        //Aquí esperar a que los clientes contesten un 200 para mandarles un ready a la carrera
-
         //Enviar Inicio Carrera -> Clientes
         InicioCarrera ready = new InicioCarrera();
         ready.setData("200");
         envioPaqueteUDP(ready, ms, grupo);
 
         while (true){
-
+            //ESTO ES UNA PRUEBA
         }
+
         //Aquí se administra toda la carrera
         /*boolean salida = false;
         while (!salida){
